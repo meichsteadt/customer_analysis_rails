@@ -1,0 +1,71 @@
+$(function() {
+  $("#table").toggle();
+  $("#graph").toggle();
+  $("#view-table").toggle();
+  $("#view-graph").toggle();
+
+  $.ajax({
+    type: "GET",
+    contentType: "application/json; charset=utf-8",
+    url: '/customers/<%= @customer.id %>/orders.json',
+      dataType: 'json',
+      success: function (data) {
+         draw(data);
+      },
+      error: function (result) {
+         error();
+      }
+  })
+
+  function draw(data) {
+    var amount_data = []
+    data.forEach(function(d) {
+      amount_data.push(d.amount)
+    })
+
+    var width = 960,
+    height = 500;
+
+    var y = d3.scale.linear()
+        .range([height, 0]);
+
+    var chart = d3.select(".chart")
+        .attr("width", width)
+        .attr("height", height);
+
+          y.domain([0, d3.max(amount_data, function(d) { return d; })]);
+
+          var barWidth = width / amount_data.length;
+
+          var bar = chart.selectAll("g")
+              .data(data)
+              .enter().append("g")
+              .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
+
+          bar.append("rect")
+              .attr("y", function(d) { return y(d.amount); })
+              .attr("height", function(d) { return height - y(d.amount); })
+              .attr("width", barWidth - 1);
+
+          bar.append("text")
+              .attr("x", barWidth / 2)
+              .attr("y", function(d) { return y(d.amount) + 3; })
+              .attr("dy", ".75em")
+              .text(function(d) { return d.model; });
+
+      var xAxis = d3.svg.axis()
+      .scale(x)
+      .orient("bottom");
+
+      chart.append("g")
+    .attr("class", "x axis")
+    .attr("transform", "translate(0," + height + ")")
+    .call(xAxis);
+  }
+
+    function type(d) {
+        d = +d; // coerce to number
+      return d;
+    }
+
+})

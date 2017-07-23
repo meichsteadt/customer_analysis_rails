@@ -1,0 +1,63 @@
+<p id="notice"><%= notice %></p>
+<div class="text-center">
+  <h1>Customers</h1>
+  <%= link_to(customers_path, remote: true) do %>
+    <button id="view-graph" class="btn btn-default">View Graph</button>
+    <button id="view-table" class="btn btn-default" style="display: none;">View Table</button>
+  <% end %>
+</div>
+<table id="table" class="table table-striped table-bordered">
+  <thead>
+    <tr>
+      <th></th>
+      <% if @sort_by == "name"  %>
+        <th><%= link_to("/customers/with_sorting/name") do %>Name &darr; <% end %></th>
+        <th><%= link_to("/customers/with_sorting/total_sales") do %>Total Sales <% end %></th>
+      <% else %>
+      <th><%= link_to("/customers/with_sorting/name") do %>Name <% end %></th>
+      <th><%= link_to("/customers/with_sorting/total_sales") do %>Total Sales &darr; <% end %></th>
+      <% end %>
+      <th>Running Sum of $</th>
+      <th>% of Sales</th>
+      <th>Running Sum of %</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    <% if @sort_by == 'name' %>
+      <% @customers.sort_by {|customer| customer.name}.each_with_index do |customer, index| %>
+        <% @percentage = customer.total_orders/@sum * 100 %>
+        <% @sales_sum += customer.total_orders %>
+        <% @percentage_sum += @percentage %>
+        <tr>
+          <td><%= index + 1 %></td>
+          <td><%= customer.name.titleize %></td>
+          <td><%= number_to_currency(customer.total_orders) %></td>
+          <td><%= number_to_currency(@sales_sum) %></td>
+          <td><%= number_to_percentage(@percentage) %></td>
+          <td><%= number_to_percentage(@percentage_sum) %></td>
+          <td><%= link_to 'Show', customer %></td>
+        </tr>
+      <% end %>
+    <% else %>
+      <% @customers.sort_by {|customer| customer.total_orders}.reverse.each_with_index do |customer, index| %>
+        <% @percentage = customer.total_orders/@sum * 100 %>
+        <% @sales_sum += customer.total_orders %>
+        <% @percentage_sum += @percentage %>
+        <tr>
+          <td><%= index + 1 %></td>
+          <td><%= customer.name.titleize %></td>
+          <td><%= number_to_currency(customer.total_orders) %></td>
+          <td><%= number_to_currency(@sales_sum) %></td>
+          <td><%= number_to_percentage(@percentage) %></td>
+          <td><%= number_to_percentage(@percentage_sum) %></td>
+          <td><%= link_to 'Show', customer %></td>
+        </tr>
+      <% end %>
+    <% end %>
+  </tbody>
+</table>
+
+<div id="graph" style="display: none">
+  <h1>Graph goes here</h1>
+</div>
