@@ -1,10 +1,17 @@
 class CustomersController < ApplicationController
   before_action :set_customer, only: [:show, :edit, :update, :destroy]
-
+  before_action :user?, only: [:index]
   # GET /customers
   # GET /customers.json
   def index
-    @customers = Customer.all
+    @customers = Customer.where(user_id: session[:user_id])
+    respond_to do |format|
+      format.json {
+        render :json => @customers.sort_by {|customer| customer.total_sales}.reverse
+      }
+      format.html
+      format.js
+    end
     @sum = Customer.total_orders
     @percentage_sum = 0
     @sales_sum = 0
@@ -38,5 +45,14 @@ class CustomersController < ApplicationController
     # Never trust parameters from the scary internet, only allow the white list through.
     def customer_params
       params.require(:customer).permit(:name)
+    end
+
+    def user?
+      if session[:user_id]
+        true
+      else
+        flash[:notice] = "You're not authorized to see that page"
+        redirect_to customer_path(session[:customer_id])
+      end
     end
 end

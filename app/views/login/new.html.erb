@@ -1,0 +1,13 @@
+<h1>Login</h1>
+<p id="flash"><%= flash[:alert] %></p>
+<%= form_tag('/login', method: 'post') do |f| %>
+  <div class="form-group">
+    <%= label_tag :email %>
+    <%= text_field_tag :email, nil, require: true, class: "form-control" %>
+  </div>
+  <div class="form-group">
+    <%= label_tag :password %>
+    <%= password_field_tag :password, nil, require: true, class: "form-control" %>
+  </div>
+  <%= submit_tag "Submit", class: "btn btn-default" %>
+<% end %>

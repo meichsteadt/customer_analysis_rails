@@ -11,6 +11,9 @@
 
   <body>
     <div class="container">
+      <% if session[:user_id] || session[:customer_id] %>
+        <%= link_to "logout", login_path(1), method: "delete", style: "float: right" %>
+      <% end %>
       <%= yield %>
     </div>
   </body>

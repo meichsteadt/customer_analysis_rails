@@ -11,7 +11,7 @@ class Customer < ApplicationRecord
     end
   end
 
-  def total_orders
+  def get_total_orders
     sum = 0
     self.orders.each do |order|
       sum += order.amount
@@ -22,7 +22,7 @@ class Customer < ApplicationRecord
   def self.total_orders
     sum = 0
     Customer.all.each do |customer|
-      sum += customer.total_orders
+      sum += customer.total_sales
     end
     sum
   end

@@ -26,13 +26,13 @@
   <tbody>
     <% if @sort_by == 'name' %>
       <% @customers.sort_by {|customer| customer.name}.each_with_index do |customer, index| %>
-        <% @percentage = customer.total_orders/@sum * 100 %>
-        <% @sales_sum += customer.total_orders %>
+        <% @percentage = customer.total_sales/@sum * 100 %>
+        <% @sales_sum += customer.total_sales %>
         <% @percentage_sum += @percentage %>
         <tr>
           <td><%= index + 1 %></td>
           <td><%= customer.name.titleize %></td>
-          <td><%= number_to_currency(customer.total_orders) %></td>
+          <td><%= number_to_currency(customer.total_sales) %></td>
           <td><%= number_to_currency(@sales_sum) %></td>
           <td><%= number_to_percentage(@percentage) %></td>
           <td><%= number_to_percentage(@percentage_sum) %></td>
@@ -40,14 +40,14 @@
         </tr>
       <% end %>
     <% else %>
-      <% @customers.sort_by {|customer| customer.total_orders}.reverse.each_with_index do |customer, index| %>
-        <% @percentage = customer.total_orders/@sum * 100 %>
-        <% @sales_sum += customer.total_orders %>
+      <% @customers.sort_by {|customer| customer.total_sales}.reverse.each_with_index do |customer, index| %>
+        <% @percentage = customer.total_sales/@sum * 100 %>
+        <% @sales_sum += customer.total_sales %>
         <% @percentage_sum += @percentage %>
         <tr>
           <td><%= index + 1 %></td>
           <td><%= customer.name.titleize %></td>
-          <td><%= number_to_currency(customer.total_orders) %></td>
+          <td><%= number_to_currency(customer.total_sales) %></td>
           <td><%= number_to_currency(@sales_sum) %></td>
           <td><%= number_to_percentage(@percentage) %></td>
           <td><%= number_to_percentage(@percentage_sum) %></td>
@@ -59,5 +59,5 @@
 </table>
 
 <div id="graph" style="display: none">
-  <h1>Graph goes here</h1>
+  <svg class="chart"></svg>
 </div>

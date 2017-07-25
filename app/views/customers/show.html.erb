@@ -2,7 +2,7 @@
 <%= link_to 'Back', customers_path %>
   <div class="text-center">
     <h1><%= @customer.name.titleize %></h1>
-    <h3>Sales YTD: <%= number_to_currency(@customer.total_orders) %></h3>
+    <h3>Sales YTD: <%= number_to_currency(@customer.total_sales) %></h3>
     <%= link_to(customer_path(@customer), remote: true) do %>
     <button id="view-graph" class="btn btn-default">View Graph</button>
     <button id="view-table" class="btn btn-default" style="display: none;">View Table</button>
@@ -26,7 +26,7 @@
   <% if @sort_by == "model" %>
     <% @customer.orders.sort_by {|order| order.model }.each_with_index do |order, index| %>
       <% @sales_sum += order.amount %>
-      <% @percentage = order.amount/@customer.total_orders * 100 %>
+      <% @percentage = order.amount/@customer.total_sales * 100 %>
       <% @percentage_sum += @percentage %>
       <tr>
         <td><%= index + 1 %></td>
@@ -40,7 +40,7 @@
   <% else %>
     <% @customer.orders.sort_by {|order| order.amount }.reverse.each_with_index do |order, index| %>
       <% @sales_sum += order.amount %>
-      <% @percentage = order.amount/@customer.total_orders * 100 %>
+      <% @percentage = order.amount/@customer.total_sales * 100 %>
       <% @percentage_sum += @percentage %>
       <tr>
         <td><%= index + 1 %></td>

@@ -2,6 +2,7 @@ Rails.application.routes.draw do
   resources :customers do
     resources :orders
   end
+  resources :login
   root to: 'customers#index'
   get 'customers/with_sorting/:sort_by', to: 'customers#index'
   get 'customers/:id/:sort_by', to: 'customers#show'

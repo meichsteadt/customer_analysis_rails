@@ -106,8 +106,9 @@ $(function() {
               return d.amount;
           }));
           var percent = Math.round(1000 * d.amount / total) / 10;
+          var format = d3.format(",");
           tooltip.select('.model').html(d.model);
-          tooltip.select('.amount').html('$ ' + d.amount);
+          tooltip.select('.amount').html('$ ' + format(d.amount));
           tooltip.select('.percent').html(percent + "% of total");
           tooltip.style('display', 'block');
           tooltip.style('opacity', 1);
