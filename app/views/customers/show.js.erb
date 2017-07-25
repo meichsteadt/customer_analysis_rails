@@ -4,63 +4,127 @@ $(function() {
   $("#view-table").toggle();
   $("#view-graph").toggle();
 
+  var numberOfProducts = 100
+
   $.ajax({
     type: "GET",
     contentType: "application/json; charset=utf-8",
     url: '/customers/<%= @customer.id %>/orders.json',
       dataType: 'json',
       success: function (data) {
-         draw(data);
+         draw(data, numberOfProducts);
       },
       error: function (result) {
          error();
       }
   })
 
-  function draw(data) {
+
+  function draw(data, numberOfProducts) {
     var amount_data = []
-    data.forEach(function(d) {
-      amount_data.push(d.amount)
+    data.forEach(function(d, i) {
+      if(i < numberOfProducts) {
+        amount_data.push(d.amount)
+      }
     })
 
-    var width = 960,
-    height = 500;
+    for(var i = data.length; i> numberOfProducts; i--) {
+      data.pop(i)
+    }
+
+    var margin = {top: 20, right: 30, bottom: 30, left: 40},
+    width = 1100 - margin.left - margin.right,
+    height = 600 - margin.top - margin.bottom;
 
     var y = d3.scale.linear()
         .range([height, 0]);
 
+    var x = d3.scale.ordinal()
+        .rangeRoundBands([0, width], .1);
+
+    var xAxis = d3.svg.axis()
+        .scale(d3.scale.linear().range([0,width]))
+        .orient("bottom")
+        .ticks(10, "%");
+
+    var yAxis = d3.svg.axis()
+        .scale(y)
+        .orient("left")
+        .ticks(data.amount, "$");
+
     var chart = d3.select(".chart")
-        .attr("width", width)
-        .attr("height", height);
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+    .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-          y.domain([0, d3.max(amount_data, function(d) { return d; })]);
+    var tooltip = d3.select('#graph')
+                    .append('div')
+                    .attr('class', 'tooltip');
+                    tooltip.append('div')
+                      .attr('class', 'model')
+                    tooltip.append('div')
+                      .attr('class', 'amount')
+                    tooltip.append('div')
+                      .attr('class', 'percent')
 
-          var barWidth = width / amount_data.length;
+    y.domain([0, d3.max(amount_data, function(d) { return d; })]);
+    x.domain(data.map(function(d) { return d.model; }));
 
-          var bar = chart.selectAll("g")
-              .data(data)
-              .enter().append("g")
-              .attr("transform", function(d, i) { return "translate(" + i * barWidth + ",0)"; });
+    chart.append("g")
+      .attr("class", "x axis")
+      .attr("transform", "translate(0," + height + ")")
+      .call(xAxis)
+      .append("text")
+        .attr("x", "50%")
+        .attr("dy", "30px")
+        .style("text-anchor", "end")
+        .text("Running %");
 
-          bar.append("rect")
-              .attr("y", function(d) { return y(d.amount); })
-              .attr("height", function(d) { return height - y(d.amount); })
-              .attr("width", barWidth - 1);
+    chart.append("g")
+      .attr("class", "y axis")
+      .call(yAxis)
+      .append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("y", 6)
+        .attr("dy", ".71em")
+        .style("text-anchor", "end")
+        .text("Total in $");
 
-          bar.append("text")
-              .attr("x", barWidth / 2)
-              .attr("y", function(d) { return y(d.amount) + 3; })
-              .attr("dy", ".75em")
-              .text(function(d) { return d.model; });
+      var path = chart.selectAll(".bar")
+        .data(data)
+      .enter().append("rect")
+        .attr("class", "bar")
+        .attr("x", function(d) { return x(d.model); })
+        .attr("y", function(d) { return y(d.amount); })
+        .attr("height", function(d) { return height - y(d.amount); })
+        .attr("width", x.rangeBand());
 
-      var xAxis = d3.svg.axis()
-      .scale(x)
-      .orient("bottom");
 
-      chart.append("g")
-    .attr("class", "x axis")
-    .attr("transform", "translate(0," + height + ")")
-    .call(xAxis);
+      path.on('mouseover', function(d ) {
+          var total = d3.sum(data.map(function(d){
+              return d.amount;
+          }));
+          var percent = Math.round(1000 * d.amount / total) / 10;
+          tooltip.select('.model').html(d.model);
+          tooltip.select('.amount').html('$ ' + d.amount);
+          tooltip.select('.percent').html(percent + "% of total");
+          tooltip.style('display', 'block');
+          tooltip.style('opacity', 1);
+          tooltip.style('background-color', 'rgba(255,255,255,.9)');
+          tooltip.style('padding', '4px');
+          tooltip.select('.label').style('color', '#333')
+        });
+
+        path.on('mouseout', function() {
+          tooltip.style('display', 'none')
+        });
+
+        path.on('mousemove', function(d) {
+          tooltip.style('top', (d3.event.layerY + 10) + 'px')
+                .style('left', (d3.event.layerX + 10) + 'px')
+        });
+
   }
 
     function type(d) {

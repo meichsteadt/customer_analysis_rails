@@ -20,33 +20,21 @@
    margin: 10px;
  }
 
- .chart {
-   overflow: scroll;
- }
-
  .bar {
   fill: steelblue;
 }
 
- .chart div {
-   font: 10px sans-serif;
-   background-color: steelblue;
-   text-align: right;
-   padding: 3px;
-   margin: 1px;
-   color: white;
-   display: inline-block;
-   width: 20px;
-   vertical-align: bottom;
- }
+.axis text {
+  font: 10px sans-serif;
+}
 
- .axis text {
-   font: 10px sans-serif;
- }
+.axis path,
+.axis line {
+  fill: none;
+  stroke: #000;
+  shape-rendering: crispEdges;
+}
 
- .axis path,
- .axis line {
-   fill: none;
-   stroke: #000;
-   shape-rendering: crispEdges;
- }
+.bar:hover {
+  fill: #ffbb78;
+}
