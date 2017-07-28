@@ -31,27 +31,25 @@
         <% @percentage_sum += @percentage %>
         <tr>
           <td><%= index + 1 %></td>
-          <td><%= customer.name.titleize %></td>
+          <td><%= link_to customer.name.titleize, customer %></td>
           <td><%= number_to_currency(customer.total_sales) %></td>
           <td><%= number_to_currency(@sales_sum) %></td>
           <td><%= number_to_percentage(@percentage) %></td>
           <td><%= number_to_percentage(@percentage_sum) %></td>
-          <td><%= link_to 'Show', customer %></td>
         </tr>
       <% end %>
     <% else %>
       <% @customers.sort_by {|customer| customer.total_sales}.reverse.each_with_index do |customer, index| %>
-        <% @percentage = customer.total_sales/@sum * 100 %>
+        <% @percentage = (customer.total_sales/@sum * 100) %>
         <% @sales_sum += customer.total_sales %>
         <% @percentage_sum += @percentage %>
         <tr>
           <td><%= index + 1 %></td>
-          <td><%= customer.name.titleize %></td>
+          <td><%= link_to customer.name.titleize, customer %></td>
           <td><%= number_to_currency(customer.total_sales) %></td>
           <td><%= number_to_currency(@sales_sum) %></td>
           <td><%= number_to_percentage(@percentage) %></td>
           <td><%= number_to_percentage(@percentage_sum) %></td>
-          <td><%= link_to 'Show', customer %></td>
         </tr>
       <% end %>
     <% end %>

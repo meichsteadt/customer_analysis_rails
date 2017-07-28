@@ -1,0 +1,22 @@
+<p id="notice"><%= notice %></p>
+<%= link_to 'Back', customer_path(@customer) %>
+<div class="text-center">
+  <h1><%= @customer.name.titleize %></h1>
+  <h3>Sales YTD: <%= number_to_currency(@customer.total_sales) %></h3>
+</div>
+<table class="table-bordered table-striped table">
+  <tr>
+    <th></th>
+    <th>Model</th>
+    <th>Estimated Sales</th>
+    <th>Estimated % of Sales</th>
+  </tr>
+  <% @recommendations.each_with_index do |rec, index| %>
+    <tr>
+      <td><%= index %></td>
+      <td><%= rec.keys.first %></td>
+      <td><%= number_to_currency(rec.values.first * @customer.total_sales) %></td>
+      <td><%= number_to_percentage(rec.values.first * 100) %></td>
+    </tr>
+  <% end %>
+</table>

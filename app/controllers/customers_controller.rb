@@ -5,20 +5,20 @@ class CustomersController < ApplicationController
   # GET /customers.json
   def index
     @customers = Customer.where(user_id: session[:user_id])
-    respond_to do |format|
-      format.json {
-        render :json => @customers.sort_by {|customer| customer.total_sales}.reverse
-      }
-      format.html
-      format.js
-    end
-    @sum = Customer.total_orders
+    @sum = Customer.total_orders.to_f
     @percentage_sum = 0
     @sales_sum = 0
     if params[:sort_by]
       @sort_by = params[:sort_by]
     else
       @sort_by = "total_sales"
+    end
+    respond_to do |format|
+      format.json {
+        render :json => @customers.sort_by {|customer| customer.total_sales}.reverse
+      }
+      format.html
+      format.js
     end
   end
 

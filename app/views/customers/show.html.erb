@@ -1,11 +1,21 @@
 <p id="notice"><%= notice %></p>
-<%= link_to 'Back', customers_path %>
+<% if session[:user_id] %>
+  <%= link_to 'Back', customers_path %>
+<% end %>
   <div class="text-center">
     <h1><%= @customer.name.titleize %></h1>
     <h3>Sales YTD: <%= number_to_currency(@customer.total_sales) %></h3>
     <%= link_to(customer_path(@customer), remote: true) do %>
-    <button id="view-graph" class="btn btn-default">View Graph</button>
-    <button id="view-table" class="btn btn-default" style="display: none;">View Table</button>
+      <button id="view-graph" class="btn btn-default">View Graph</button>
+      <button id="view-table" class="btn btn-default" style="display: none;">View Table</button>
+    <% end %>
+    <%= link_to(customer_recommendations_path(@customer)) do %>
+      <button id="view-recommended" class="btn btn-default">View Recommended Items</button>
+    <% end %>
+    <% if session[:user_id] %>
+      <%= link_to(customer_comparisons_path(@customer)) do %>
+        <button class="btn btn-default">View Customer Comparisons</button>
+      <% end %>
     <% end %>
   </div>
 
@@ -35,7 +45,7 @@
         <td><%= number_to_currency(@sales_sum) %></td>
         <td><%= number_to_percentage(@percentage) %></td>
         <td><%= number_to_percentage(@percentage_sum) %></td>
-      <tr>
+      </tr>
     <% end %>
   <% else %>
     <% @customer.orders.sort_by {|order| order.amount }.reverse.each_with_index do |order, index| %>
@@ -49,7 +59,7 @@
         <td><%= number_to_currency(@sales_sum) %></td>
         <td><%= number_to_percentage(@percentage) %></td>
         <td><%= number_to_percentage(@percentage_sum) %></td>
-      <tr>
+      </tr>
     <% end %>
   <% end %>
 </table>

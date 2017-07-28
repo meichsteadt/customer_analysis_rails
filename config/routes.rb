@@ -1,6 +1,8 @@
 Rails.application.routes.draw do
   resources :customers do
     resources :orders
+    resources :comparisons
+    resources :recommendations
   end
   resources :login
   root to: 'customers#index'

@@ -1,0 +1,21 @@
+<p id="notice"><%= notice %></p>
+<%= link_to 'Back', customer_path(@customer) %>
+<div class="text-center">
+  <h1><%= @customer.name.titleize %></h1>
+  <h3>Sales YTD: <%= number_to_currency(@customer.total_sales) %></h3>
+</div>
+
+<div id="comparisons">
+  <table class="table table-bordered">
+    <tr>
+      <th>Customer</th>
+      <th>Similarity Score</th>
+    </tr>
+    <% @customer.comparisons.each do |comparison| %>
+      <tr>
+        <td><%= link_to comparison.customer_name, customer_comparison_path(@customer, Customer.find_by_name(comparison.customer_name)) %></td>
+        <td><%= number_to_percentage(comparison.sim_pearson * 100) %></td>
+      </tr>
+    <% end %>
+  </table>
+</div>
