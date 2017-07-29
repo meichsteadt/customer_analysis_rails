@@ -98,6 +98,114 @@ class Customer < ApplicationRecord
     mi_returned
   end
 
+  def self.kcluster(k)
+    #determine min and max of each point
+    models = []
+    min_maxes = {}
+    Order.all.each do |order|
+      if !models.include?(order.model)
+        models.push(order.model)
+      end
+    end
+
+    models.each do |model|
+      model_amounts = Order.where(model: model).sort_by {|order| order.amount}
+      max = model_amounts.last.amount
+      min = model_amounts.first.amount
+      if min > 0 && model_amounts.length < Customer.all.length
+        min = 0
+      end
+      if max < 0 && model_amounts.length < Customer.all.length
+        max = 0
+      end
+      min_maxes[model] = {"min": min, "max": max}
+    end
+    min_maxes
+
+    clusters = {}
+    best_matches = {}
+    k.times do |time|
+      clusters["cluster" + (time + 1).to_s] = {}
+      min_maxes.each do |key, value|
+        clusters["cluster" + (time + 1).to_s][key] = rand(value[:min]..value[:max])
+      end
+    end
+
+    customer_values = {}
+    Customer.all.each do |customer|
+      customer_values[customer.id] = {}
+      clusters["cluster1"].keys.each do |key|
+        customer_amount = customer.orders.find_by_model(key)
+        if customer_amount
+          customer_values[customer.id][key] = customer_amount.amount
+        else
+          customer_values[customer.id][key] = 0
+        end
+      end
+    end
+
+    last_matches = {}
+    100.times do
+      best_matches = {}
+      clusters.each do |key, value|
+        best_matches[key] = []
+      end
+      Customer.all.each do |customer|
+        best_match = 1
+        best_key = nil
+        clusters.each do |key, value|
+          d = customer.distance(customer_values[customer.id], value)
+          if d < best_match
+             best_match = d
+             best_key = key
+          end
+        end
+        best_matches[best_key].push(customer)
+      end
+      if best_matches == last_matches
+        break
+      else
+        last_matches = best_matches
+      end
+
+      avgs = {}
+      clusters.each do |key, cluster|
+        avgs[key] = {}
+        cluster.each do |key2, value|
+          sum = 0
+          best_matches[key].each do |customer|
+            amount = customer.orders.find_by_model(key2)
+            if amount; sum+= amount.amount end
+          end
+          if best_matches[key].length != 0
+            avgs[key][key2] = sum/best_matches[key].length
+          end
+        end
+      end
+    end
+    best_matches
+  end
+
+  def distance(customer_values, cluster)
+    sum1 = 0
+    sum1Sq = 0
+    sum2 = 0
+    sum2Sq = 0
+    pSum = 0
+    cluster.each do |key, value|
+      sum1 += customer_values[key]
+      sum1Sq += customer_values[key] ** 2
+      sum2 += value
+      sum2Sq += value ** 2
+      pSum += value * customer_values[key]
+    end
+
+    num = pSum - sum1 * sum2 /cluster.length
+    den = Math.sqrt((sum1Sq - (sum1 ** 2)/cluster.length) * (sum2Sq - (sum2 ** 2)/cluster.length))
+    if den == 0; return 0 end;
+    return 1 - num/den
+  end
+
   def self.get_customers
     csv_text = File.read("customers.csv")
     csv = CSV.parse(csv_text, :headers => true)
