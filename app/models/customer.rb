@@ -100,104 +100,90 @@ class Customer < ApplicationRecord
 
   def self.kcluster(k)
     #determine min and max of each point
-    models = []
-    min_maxes = {}
-    Order.all.each do |order|
-      if !models.include?(order.model)
-        models.push(order.model)
+    ranges = []
+    csv_text = File.read("customer_matrix.csv")
+    csv = CSV.parse(csv_text, :headers => true)
+    (csv[0].length - 1).times do |i|
+      min = 0
+      max = 0
+      csv.each do |row|
+        if row[i + 1].to_f > max; max = row[i + 1].to_f end
+        if row[i + 1].to_f < min; min = row[i + 1].to_f end
       end
+      ranges.push([min, max])
     end
 
-    models.each do |model|
-      model_amounts = Order.where(model: model).sort_by {|order| order.amount}
-      max = model_amounts.last.amount
-      min = model_amounts.first.amount
-      if min > 0 && model_amounts.length < Customer.all.length
-        min = 0
-      end
-      if max < 0 && model_amounts.length < Customer.all.length
-        max = 0
-      end
-      min_maxes[model] = {"min": min, "max": max}
-    end
-    min_maxes
-
-    clusters = {}
-    best_matches = {}
+    clusters = []
     k.times do |time|
-      clusters["cluster" + (time + 1).to_s] = {}
-      min_maxes.each do |key, value|
-        clusters["cluster" + (time + 1).to_s][key] = rand(value[:min]..value[:max])
+      clusters.push([])
+      ranges.each do |range|
+        cluster = rand*(range[1] - range[0]) + range[0]
+        clusters[time].push(cluster)
       end
     end
 
-    customer_values = {}
-    Customer.all.each do |customer|
-      customer_values[customer.id] = {}
-      clusters["cluster1"].keys.each do |key|
-        customer_amount = customer.orders.find_by_model(key)
-        if customer_amount
-          customer_values[customer.id][key] = customer_amount.amount
-        else
-          customer_values[customer.id][key] = 0
-        end
+    last_matches = []
+    best_matches = nil
+    100.times do |i|
+      best_matches = []
+      k.times do
+        best_matches.push([])
       end
-    end
-
-    last_matches = {}
-    100.times do
-      best_matches = {}
-      clusters.each do |key, value|
-        best_matches[key] = []
-      end
-      Customer.all.each do |customer|
-        best_match = 1
-        best_key = nil
-        clusters.each do |key, value|
-          d = customer.distance(customer_values[customer.id], value)
-          if d < best_match
-             best_match = d
-             best_key = key
+      puts "iteration #{i + 1}"
+      csv.each_with_index do |row, index|
+        best_match = 0
+        k.times do |time|
+          d = Customer.distance(clusters[time], row)
+          if d < Customer.distance(clusters[best_match], row)
+            best_match = time
           end
         end
-        best_matches[best_key].push(customer)
+        best_matches[best_match].push(index)
       end
+
       if best_matches == last_matches
         break
       else
         last_matches = best_matches
       end
 
-      avgs = {}
-      clusters.each do |key, cluster|
-        avgs[key] = {}
-        cluster.each do |key2, value|
-          sum = 0
-          best_matches[key].each do |customer|
-            amount = customer.orders.find_by_model(key2)
-            if amount; sum+= amount.amount end
-          end
-          if best_matches[key].length != 0
-            avgs[key][key2] = sum/best_matches[key].length
+      avgs = []
+      k.times do |time|
+        avgs = []
+        if best_matches[time].length > 0
+          (csv[0].length - 1).times do |index|
+            sum = 0
+            best_matches[time].each do |i|
+              sum += csv[i][index + 1].to_f
+            end
+            avgs[index] = sum/best_matches[time].length
           end
         end
+      clusters[time] = avgs
       end
     end
-    best_matches
+    arr =[]
+    best_matches.each_with_index do |match_arr, i|
+      arr.push([])
+      match_arr.each do |match|
+        arr[i].push(Customer.find(csv[match][0].to_i).name.titleize)
+      end
+    end
+    arr
   end
 
-  def distance(customer_values, cluster)
+  def self.distance(cluster, customer_values)
     sum1 = 0
     sum1Sq = 0
     sum2 = 0
     sum2Sq = 0
     pSum = 0
-    cluster.each do |key, value|
-      sum1 += customer_values[key]
-      sum1Sq += customer_values[key] ** 2
-      sum2 += value
-      sum2Sq += value ** 2
-      pSum += value * customer_values[key]
+    cluster.length.times do |time|
+      sum1 += cluster[time]
+      sum1Sq += cluster[time] ** 2
+      sum2 += customer_values[time + 1].to_f
+      sum2Sq += customer_values[time + 1].to_f ** 2
+      pSum += cluster[time] * customer_values[time + 1].to_f
     end
 
     num = pSum - sum1 * sum2 /cluster.length
@@ -228,5 +214,41 @@ class Customer < ApplicationRecord
       sum += customer.total_sales
     end
     sum
+  end
+
+  def self.write_matrix
+    models = ["customer_id"]
+    Order.all.each do |order|
+      if !models.include?(order.model)
+        models.push(order.model)
+      end
+    end
+    CSV.open("customer_matrix.csv", "wb") do |csv|
+      csv << models
+      Customer.all.each do |customer|
+        arr = []
+        arr.push(customer.id)
+        models.each do |model|
+          order = customer.orders.find_by_model(model)
+          if order != nil
+            arr.push(order.amount)
+          else
+            arr.push(0)
+          end
+        end
+        arr.push("\n")
+        csv << arr
+      end
+    end
+  end
+
+  def self.read_matrix
+    csv_text = File.read("customer_matrix.csv")
+    csv = CSV.parse(csv_text, :headers => true)
+    arr = []
+    csv.each do |row|
+      arr.push(row["customer_id"])
+    end
+    arr
   end
 end
